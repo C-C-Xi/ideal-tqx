@@ -10,11 +10,12 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true
   },
   "exclude": [
     "node_modules",
     "dist"
   ],
-   
+
 }

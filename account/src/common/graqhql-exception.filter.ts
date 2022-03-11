@@ -1,6 +1,6 @@
 import { Catch, ArgumentsHost, HttpException, Logger, HttpStatus, } from '@nestjs/common'
 import { GqlExceptionFilter, GqlArgumentsHost } from '@nestjs/graphql'
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 
 // 过滤graqhql的异常
 @Catch(HttpException)

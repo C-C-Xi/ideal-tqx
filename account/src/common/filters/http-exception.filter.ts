@@ -7,7 +7,7 @@ import {
     HttpStatus,
 } from '@nestjs/common';
 import { GqlArgumentsHost } from '@nestjs/graphql';
-import * as dayjs from 'dayjs';
+import  dayjs from 'dayjs';
 
 // 需要实现 ExceptionFilter 接口，里面有一个catch方法需要实现
 @Catch(HttpException)
@@ -20,13 +20,14 @@ export class HttpExceptionFilter implements ExceptionFilter<HttpException> {
             exception instanceof HttpException
                 ? exception.getStatus()
                 : HttpStatus.INTERNAL_SERVER_ERROR;
-        const exceptionRes = exception.getResponse() as { error: string, message: string }
+        const exceptionRes = exception.getResponse() as { error: string, message: string ,data:any}
         if (response?.status) {
-            const { error, message } = exceptionRes
+            const { error, message,data } = exceptionRes
             const errorResponse = {
                 timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'),
                 message: message || exceptionRes,
                 path: request?.url,
+                data:data,
                 status,
                 error,
             }

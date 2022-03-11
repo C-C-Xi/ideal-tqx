@@ -5,7 +5,7 @@ import { classToPlain } from 'class-transformer';
 import systemConfig from "../config/system";
 
 
-const transformValue = (result: any, code = 0, message = '请求成功') => {
+const transformValue = (result: any, code = 200, message = '请求成功') => {
     const { returnFormat } = systemConfig
     return {
         [returnFormat.result]: classToPlain(result),

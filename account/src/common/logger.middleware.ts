@@ -1,6 +1,6 @@
 import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
-import * as dayjs from "dayjs";
+import  dayjs from "dayjs";
 import { isEmpty } from 'class-validator';
 
 @Injectable()  // 使用Injectable装饰器
