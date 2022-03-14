@@ -1,0 +1,28 @@
+{
+  "wechat":{
+    "appId": "",
+    "appSecret": "",
+    "uri": ""
+  },
+  "facebook":{
+    "appId": "269257325302562",
+    "appSecret": "73554c19a41679feda69550281679e27",
+    "uri": "https://graph.fb.gg/v13.0/",
+    "debugUri": "https://graph.fb.gg/v13.0/debug_token?"
+  },
+  "twitter":{
+    "appId": "",
+    "appSecret": "",
+    "uri": ""
+  },
+  "apple":{
+    "appId": "",
+    "appSecret": "",
+    "uri": ""
+  },
+  "google":{
+    "appId": "",
+    "appSecret": "",
+    "uri": "https://oauth2.googleapis.com"
+  }
+}

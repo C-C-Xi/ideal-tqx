@@ -16,6 +16,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { RoleAuthGuard } from './modules/auth/auth.guard';
 import {MongooseModule} from "@nestjs/mongoose";
 import {ShopModule} from "./modules/shop/shop.module";
+import {CommonModule} from "./modules/common/common.module";
 
 
 @Module({
@@ -82,8 +83,8 @@ import {ShopModule} from "./modules/shop/shop.module";
     AuthModule,
     XxxModule,
     UsersModule,
-    ShopModule// graphql   代码优先
-    // GraphModule, // graphql 模式优先
+    ShopModule,
+      CommonModule
   ],
   controllers: [AppController],
   providers: [
@@ -97,16 +98,4 @@ import {ShopModule} from "./modules/shop/shop.module";
 })
 export class AppModule {}
 
-/* 局部监听 */
-// implements NestModule {
-//   configure(consumer: MiddlewareConsumer) {
-//     consumer.apply(LoggerMiddleware)
-//       // 不监听的路由
-//       .exclude()
-//       // 需要监听的路由
-//       .forRoutes({
-//         path: '*',
-//         method: RequestMethod.ALL
-//       })
-//   }
-// }
+

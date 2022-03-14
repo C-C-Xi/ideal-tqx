@@ -3,9 +3,10 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { classToPlain } from 'class-transformer';
 import systemConfig from "../config/system";
+import {CodeEnum} from "../config/enum/code.enum";
 
 
-const transformValue = (result: any, code = 200, message = '请求成功') => {
+const transformValue = (result: any, code = CodeEnum.OK, message = '请求成功') => {
     const { returnFormat } = systemConfig
     return {
         [returnFormat.result]: classToPlain(result),

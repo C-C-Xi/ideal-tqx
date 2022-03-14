@@ -6,7 +6,6 @@ export class Exception {
 
     public static toException(name,msg:string="",data?) {
         let errorCodes = {
-            OK:{status:200, message: ""},
             CREATEOK:{status:201, message: ""},
             AUTHERROR:{status:340704, message: ""},
             PARAMSERROR:{status:340703, message: ""},
@@ -24,7 +23,8 @@ export class Exception {
             LOGIN_ERROR_IP_LOCKED:{status:310004, message: "ip被锁定"},
             LOGIN_ERROR_APPTYPE:{status:310005, message: "appType错误"},
             LOGIN_ERROR_HTTP:{status:310006, message: "请求游服异常"},
-
+            LOGIN_ERROR_IP_NOT_FOUND:{status:310007, message: "IP不存在"},
+            LOGIN_ERROR__DEVICEINFO:{status:310008, message: "设备号不存在"},
 
             ORDER_ERROR_NOTFOUND:{status:340901, message: "未找到订单"},
             ORDER_PRODUCT_ERROR:{status:340902, message: "商品与订单商品对不上"},
@@ -47,6 +47,8 @@ export class Exception {
 
 
             SYSTEMS_ERROR_USER_NOT_FOUND: {status: 30404, message: "用户不存在"},
+            SYSTEMS_ERROR_HTTP: {status: 30404, message: "rp请求异常"},
+            SYSTEMS_ERROR_JSON: {status: 30404, message: "JSON格式化异常"},
 
 
         };
