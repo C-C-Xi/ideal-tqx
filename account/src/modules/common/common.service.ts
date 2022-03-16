@@ -13,6 +13,7 @@ import {IpError} from "../../entity/mongo/account/IPError.schema";
 import {Model} from "mongoose";
 import fs from "fs";
 import path from "path";
+import {PlayerDeviceInfo} from "../../entity/mongo/default/PlayerDeviceInfo.schema";
 
 const searcherIp = require('geoip-lite');
 
@@ -22,6 +23,8 @@ export class CommonService {
     constructor(
         @InjectModel(IpError.name)
         private ipErrorModel: Model<IpError>,
+        @InjectModel(PlayerDeviceInfo.name)
+        private playerDeviceInfoModel: Model<PlayerDeviceInfo>,
     ) {
         this.initConfig();
     }
@@ -114,5 +117,22 @@ export class CommonService {
     async getDevelopType(): Promise<any> {
         return process.env.DEVELOP_TYPE;
     }
+    public async isWhitePlayer(uid): Promise<any> {
+        let findPlayerDeviceInfo = await this.playerDeviceInfoModel.findOne({ uid: uid }).lean();
+        return !!findPlayerDeviceInfo && findPlayerDeviceInfo.status == 99;
+    }
+    public async getGameServer(appType,lockPlayer=undefined): Promise<any> {
+        let gameServers: any;
+        gameServers = this.config.get("config" + appType + ".GAME_SERVER_LOGIN");
+        if (!!lockPlayer && !!lockPlayer.white && !!lockPlayer.bate) {
+            // bate 内部账号
+            gameServers = this.config.get("config" + appType + ".GAME_SERVER_LOGIN_BATE");
+        }
+        if (!gameServers) {
+            throw Exception.toException(ExceptionEnum.LOGIN_ERROR_APPTYPE,"appType错误：" + appType,{indulgeCheck: false})
+        }
 
+        let num = Math.floor(Math.random() * (gameServers.length - 1 + 1)) + 0;
+        return gameServers[num];
+    }
 }

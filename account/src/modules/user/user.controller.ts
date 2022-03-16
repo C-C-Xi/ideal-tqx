@@ -26,12 +26,12 @@ import {ErrorLogDto} from "./dtos/ErrorLog.dto";
 import {LoginLogDto} from "./dtos/LoginLog.dto";
 import {VipConfigDto} from "./dtos/VipConfig.dto";
 
-@ApiTags('shop') // 在swagger API文档添加标签名称，独立的一项列表
+@ApiTags('public') // 在swagger API文档添加标签名称，独立的一项列表
 @ApiHeader({
   name: 'X-MyHeader',
   description: '自定义标题',
 })
-@Controller('shop')
+@Controller('public')
 export class UserController {
 
   /**

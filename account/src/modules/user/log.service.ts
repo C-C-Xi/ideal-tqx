@@ -13,23 +13,37 @@ import * as _ from "underscore";
 import {Exception} from "../../exception/Exception";
 import {ExceptionEnum} from "../../exception/Exception.enum";
 import {LoginDto} from "./dtos/Login.dto";
+import {ErrorLog} from "../../entity/mysql/default/ErrorLog.entity";
+import {LoginLog} from "../../entity/mysql/default/LoginLog.entity";
 @Injectable()
 export class LogService {
     constructor(
-        @InjectModel(NotificationConfig.name)
-        private notificationConfigModel: Model<NotificationConfig>,
-        @InjectModel(IpError.name)
-        private ipErrorModel: Model<IpError>,
+        @InjectRepository(ErrorLog, "default")
+        private readonly errorLogRepository: Repository<ErrorLog>,
+        @InjectRepository(LoginLog, "default")
+        private readonly loginlogRepository: Repository<LoginLog>,
     ) {
     }
 
 
 
     async errorlog(body: any) {
+        let time = parseInt(String(_.now() / 1000));
+        body.ctime = time;
+        try {
+            await this.errorLogRepository.insert(body);
+        } catch (error) {
 
+        }
+        return
     }
 
     async loginlog(body: any) {
-
+        let time = parseInt(String(_.now() / 1000));
+        body.ctime = time;
+        try {
+            await this.loginlogRepository.insert(body);
+        } catch (error) {
+        }
     }
 }

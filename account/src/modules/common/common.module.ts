@@ -7,9 +7,11 @@ import {MongooseModule} from "@nestjs/mongoose";
 import {CommonService} from "./common.service";
 import {NotificationConfigSchemaModel} from "../../entity/mongo/system/NotificationConfig.schema";
 import {IpErrorModel} from "../../entity/mongo/account/IPError.schema";
+import {PlayerDeviceInfoModel} from "../../entity/mongo/default/PlayerDeviceInfo.schema";
 
 const BackendModel = [
-    NotificationConfigSchemaModel
+    NotificationConfigSchemaModel,
+    PlayerDeviceInfoModel
 ];
 const StatisticsModel = [
     IpErrorModel
