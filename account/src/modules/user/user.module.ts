@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
-import { UserResolver } from './user.resolver'
 import { UserService } from './user.service'
 import { User } from './user.entity'
 import {UserController} from "./user.controller";
@@ -56,7 +55,7 @@ const CommonResourceModel = [
         CommonModule
     ],
     controllers:[UserController],
-    providers: [UserResolver, UserService],
+    providers: [UserService],
     exports: [UserService,LogService],
 })
 export class UsersModule { }

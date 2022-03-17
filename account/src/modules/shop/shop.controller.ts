@@ -18,6 +18,7 @@ import { ValidationPipe } from 'src/common/pipes/validation.pipe';
 import {ShopService} from "./shop.service";
 import {CreateLabelDto} from "./dto/create.label.dto";
 import {ListShopConfigDto} from "./dto/list.shopConfig.dto";
+import {googleResultDto} from "./dto/googleResult.dto";
 
 @ApiTags('shop') // 在swagger API文档添加标签名称，独立的一项列表
 @ApiHeader({
@@ -131,15 +132,10 @@ export class ShopController {
     }
   }
 
-  @Post("public/alipay_result")
-  async alipayResult(@Body() body: any): Promise<any> {
-    // 支付结果
-    return this.shopService.aliPayResult(body);
-  }
 
 
   @Post("public/googlepay")
-  async googleResult(@Body() body: any): Promise<any> {
+  async googleResult(@Body() body: googleResultDto): Promise<any> {
     // 支付结果
     if(!body.type){
       return {

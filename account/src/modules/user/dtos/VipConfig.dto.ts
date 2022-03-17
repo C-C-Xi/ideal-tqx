@@ -11,16 +11,5 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 
 export class VipConfigDto {
-  @ApiPropertyOptional({  description: 'ip' })
-  readonly ip: string;
-
-
-  @ApiPropertyOptional({
-    description: '小时',
-  })
-
-  @IsNumber()
-  readonly hour?: number;
-
 
 }

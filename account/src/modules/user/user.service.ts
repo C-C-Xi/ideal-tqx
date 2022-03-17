@@ -27,7 +27,7 @@ import {
 import {PlayerDeviceInfo} from "../../entity/mongo/default/PlayerDeviceInfo.schema";
 import {ConfigLobbyVipLabel} from "../../entity/mongo/gameUs/config/advanced/ConfigLobbyVipLabel.schema";
 import {ConfigLobbyVip} from "../../entity/mongo/gameUs/config/advanced/ConfigLobbyVIp.schema";
-
+const searcherIp = require('geoip-lite');
 @Injectable()
 export class UserService {
     private readonly

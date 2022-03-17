@@ -12,15 +12,16 @@ import { Transform } from 'class-transformer';
 
 export class UnbindDto {
   @ApiPropertyOptional({  description: 'ip' })
-  readonly ip: string;
+  @IsNotEmpty()
+  readonly accToken: string;
 
 
   @ApiPropertyOptional({
     description: '小时',
   })
-
   @IsNumber()
-  readonly hour?: number;
+  @IsNotEmpty()
+  readonly appType: number;
 
 
 }

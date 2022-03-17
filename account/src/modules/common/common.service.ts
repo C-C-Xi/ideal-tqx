@@ -14,6 +14,7 @@ import {Model} from "mongoose";
 import fs from "fs";
 import path from "path";
 import {PlayerDeviceInfo} from "../../entity/mongo/default/PlayerDeviceInfo.schema";
+import {ToPlayer} from "../../entity/mongo/default/ToPlayer.schema";
 
 const searcherIp = require('geoip-lite');
 
@@ -25,6 +26,8 @@ export class CommonService {
         private ipErrorModel: Model<IpError>,
         @InjectModel(PlayerDeviceInfo.name)
         private playerDeviceInfoModel: Model<PlayerDeviceInfo>,
+        @InjectModel(ToPlayer.name)
+        private toPlayerModel: Model<ToPlayer>,
     ) {
         this.initConfig();
     }
@@ -110,6 +113,38 @@ export class CommonService {
         return region
     }
 
+    async searchPlayer(params: any): Promise<any> {
+        let where: any = {};
+
+            where[params.searchKey] = Number(params.searchValue);
+
+
+        let res:any = await this.toPlayerModel.findOne(where, {
+            _id: 0, uid: 1, mobile: 1, wxInfo: 1,
+            partnerInfo: 1, deviceInfo: 1, accountInfo: 1, playerAircraft: 1, createTime: 1
+        }).lean();
+        let resData: any = {};
+        if (!!res) {
+            resData.uid = res.uid;
+            resData.mobile = res.mobile;
+            resData.nickname = res[params.type]["nickName"];
+            resData.faceImgUrl = res[params.type]["faceImgUrl"];
+            resData.qid = res.partnerInfo.qid;
+            resData.deviceId = res.deviceInfo.deviceId;
+            resData.userId = res[params.type]["userId"];
+            resData.vip = res.accountInfo.vipLv;
+            resData.oriDeviceId = res.deviceInfo.oriDeviceId;
+            resData.oriDeviceIdType = res.deviceInfo.oriDeviceIdType;
+            resData.amount = res.accountInfo.amount;
+            resData.bulletLv = res.playerAircraft.bulletLv;
+            resData.appType = !!res.partnerInfo.loginAppType ? res.partnerInfo.loginAppType : 0;
+            resData.registerAppType = !!res.partnerInfo.registerAppType ? res.partnerInfo.registerAppType : 0;
+            resData.createTime = res.createTime;
+            resData.breakThroughLevelId = !!res.playerAircraft.breakThroughLevelId ? res.playerAircraft.breakThroughLevelId : 0;
+        }
+
+        return resData ;
+    }
     async getENV(key: string): Promise<any> {
         return process.env[key];
     }
@@ -134,5 +169,60 @@ export class CommonService {
 
         let num = Math.floor(Math.random() * (gameServers.length - 1 + 1)) + 0;
         return gameServers[num];
+    }
+
+    public async formateTime(date: any = new Date(), fmt = "yyyy-MM-dd h:m:s") {
+        let o = {
+            'M+': date.getMonth() + 1, // 月份
+            'd+': date.getDate(), // 日
+            'h+': date.getHours(), // 小时
+            'm+': date.getMinutes(), // 分
+            's+': date.getSeconds(), // 秒
+            'S': date.getMilliseconds() // 毫秒
+        }
+        if (/(y+)/.test(fmt)) {
+            fmt = fmt.replace(RegExp.$1, (date.getFullYear() + '').substr(4 - RegExp.$1.length))
+        }
+
+        for (var k in o) {
+            if (new RegExp('(' + k + ')').test(fmt)) {
+                fmt = fmt.replace(RegExp.$1, (RegExp.$1.length === 1) ? (o[k]) : (('00' + o[k]).substr(('' + o[k]).length)))
+            }
+        }
+        return fmt
+    }
+
+    public async today() {
+        return Date.parse(await this.formateTime(new Date(), "yyyy.MM.dd")) / 1000
+    }
+
+    public async realDay(time) {
+        return Date.parse(await this.formateTime(new Date(time), "yyyy.MM.dd")) / 1000
+    }
+
+    public async monthStart() {
+        let date = new Date();
+        let y = date.getFullYear();
+        let m = date.getMonth() + 1;
+        let needTime = "";
+        if (m < 10) {
+            needTime += y + "-" + "0" + m + "-" + "01" + " 00:00:00"
+        } else {
+            needTime += y + "-" + m + "-" + "01" + " 00:00:00"
+        }
+
+        let ct = await this.realDay(needTime);
+        return ct;
+    }
+
+    public nonceStr(num: Number) {
+        let strPol = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz";
+        let str = "";
+        for (let i = 0; i < num; i++) {
+            let t = Math.floor(Math.random() * strPol.length);
+            str += strPol[t];
+        }
+
+        return str;
     }
 }

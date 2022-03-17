@@ -8,8 +8,8 @@ export class PlayerDeviceInfo extends Document {
     @Prop()
     status: number;
 
-    @Prop()
-    antiEmuAndroid: object;
+    @Prop({type:Object})
+    antiEmuAndroid;
 }
 
 export const PlayerDeviceInfoSchema = SchemaFactory.createForClass(PlayerDeviceInfo);

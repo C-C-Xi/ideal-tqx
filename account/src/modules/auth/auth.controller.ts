@@ -19,7 +19,7 @@ export class AuthController {
 
   /**
    * [ 登录 ] 执行login返回 access_token 令牌，用于验证登陆
-   * @param req 
+   * @param req
    * @param body 必须包含username和password，负责不会通过AuthGuard('local')。也可以修改LocalStrategy实现
    */
   @UseGuards(AuthGuard('local'))
@@ -28,7 +28,7 @@ export class AuthController {
   // @NoAuth()
   async login(@Request() req, @Body() body: LoginDto) {
     const user = await this.authService.validateUser(body.name, body.password);
-    return this.authService.createToken(user);
+    // return this.authService.createToken(user);
   }
 
   // [ 获取用户信息 ] 使用JWT验证。访问这个接口时会先验证access_token是否能够访问

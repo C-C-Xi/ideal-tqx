@@ -49,6 +49,15 @@ export class Shop {
     })
     gameServerMsg: string;
 
+    @Column({
+        type: "varchar",
+        length: 1024,
+        name: "payment_msg",
+        charset: 'utf8mb4',
+        nullable: true
+    })
+    paymentMsg: string;
+
     @Index("payId-idx")
     @Column({
         type: "varchar",
@@ -65,12 +74,29 @@ export class Shop {
     })
     status: number;
 
+    @Index('extStatus-idx')
+    @Column({
+        type: "tinyint",
+        name: "extStatus",
+        nullable: true
+    })
+    extStatus: number;
+
     @Index('goodsId-idx')
     @Column({
         type: "bigint",
         name: "goods_id"
     })
     goodsId: number;
+
+    @Index('googleProductId-idx')
+    @Column({
+        type: "varchar",
+        name: "google_product_id",
+        charset: 'utf8mb4',
+        nullable: true
+    })
+    googleProductId: string;
 
     @Column({
         type: "varchar",
@@ -125,14 +151,6 @@ export class Shop {
     })
     idlock: number;
 
-    @Index("gainItemType-idx")
-    @Column({
-        type: "int",
-        name: "gainItemType",
-        default: 0
-    })
-    gainItemType: number;
-
     @Index("gold-idx")
     @Column({
         type: "bigint",
@@ -140,14 +158,6 @@ export class Shop {
         default: 0
     })
     gold: number;
-
-    @Index("ap-idx")
-    @Column({
-        type: "bigint",
-        name: "ap",
-        default: 0
-    })
-    ap: number;
 
     @Index("stone-idx")
     @Column({
@@ -234,4 +244,53 @@ export class Shop {
         nullable: true
     })
     tabType: number;
+
+    @Column({
+        type: "int",
+        name: "goodsType",
+        nullable: true
+    })
+    goodsType: number;
+
+    @Column({
+        type: "int",
+        name: "appType",
+        nullable: true,
+        default: 0
+    })
+    appType: number;
+
+    @Column({
+        type: "int",
+        name: "payAppType",
+        nullable: true,
+        default: 3
+    })
+    payAppType: number;
+
+    @Index("mchid-idx")
+    @Column({
+        type: "varchar",
+        length: 64,
+        name: "mchid",
+        charset: 'utf8mb4',
+        nullable: true,
+    })
+    mchid: string;
+
+    @Column({
+        type: "tinyint",
+        name: "firstPay",
+        default: 0
+    })
+    firstPay: number;
+
+    @Column({
+        type: "varchar",
+        length: 1024,
+        name: "trackingIO",
+        charset: 'utf8mb4',
+        nullable: true
+    })
+    trackingIO: string;
 }

@@ -14,11 +14,11 @@ export class AuthResolver {
 
   @Mutation(() => ResultAuthToken)
   async login(@Args('input') input: LoginInputDto) {
-    const user = await this.authService.validateUser(
-      input.name,
-      input.password,
-    );
-    return this.authService.createToken(user);
+    // const user = await this.authService.validateUser(
+    //   input.name,
+    //   input.password,
+    // );
+    // return this.authService.createToken(user);
   }
 
   @Query(() => ResultAuthModule)

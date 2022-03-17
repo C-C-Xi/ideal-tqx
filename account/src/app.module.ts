@@ -8,7 +8,6 @@ import { GraphQLModule } from '@nestjs/graphql';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { XxxModule } from './modules/xxx/xxx.module';
 // import { GraphModule } from './modules/graph/graph.module';
 import { UsersModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -81,7 +80,6 @@ import {CommonModule} from "./modules/common/common.module";
 
     // 路由模块
     AuthModule,
-    XxxModule,
     UsersModule,
     ShopModule,
       CommonModule

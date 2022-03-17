@@ -9,14 +9,14 @@ export class ToPlayer extends Document {
     @Prop()
     specialLoginFlag: boolean;
 
-    @Prop()
-    wxInfo: object;
+    @Prop({type:Object})
+    wxInfo;
 
-    @Prop()
-    deviceInfo: object;
+    @Prop({type:Object})
+    deviceInfo;
 
-    @Prop()
-    partnerInfo: object;
+    @Prop({type:Object})
+    partnerInfo;
 }
 
 export const ToPlayerSchema = SchemaFactory.createForClass(ToPlayer);

@@ -7,6 +7,8 @@ import {Model} from "mongoose";
 import {LabelConfig} from "../../entity/mongo/shop/LabelConfig.schema";
 import {InjectModel} from "@nestjs/mongoose";
 import {Cron, CronExpression, Interval} from "@nestjs/schedule";
+import * as UserConstConfig from '../../config/enum/user.const';
+import * as shopConstConfig from '../../config/enum/shop.const';
 import * as _ from "underscore";
 import {ToPlayer} from "../../entity/mongo/default/ToPlayer.schema";
 import {LabelReleaseConfig} from "../../entity/mongo/shop/LabelReleaseConfig.schema";
@@ -27,10 +29,12 @@ import {Channels} from "../../entity/mongo/channel/Channels.schema";
 import {Exception} from "../../exception/Exception";
 import {ExceptionEnum} from "../../exception/Exception.enum";
 import {CodeEnum} from "../../config/enum/code.enum";
+import {CommonService} from "../common/common.service";
 @Injectable()
 export class ShopService {
     private  accessToken="";
   constructor(
+      private readonly commonService: CommonService,
       @InjectRepository(Shop, "tapout_pro")
       private shopRepository: Repository<Shop>,
       @InjectRepository(ShopLink, "tapout_pro")
@@ -123,8 +127,8 @@ export class ShopService {
                 qb = qb.andWhere(
                     "create_time BETWEEN :start AND :end AND status=:status AND player_id=:uid AND goods_id=:goodsId",
                     {
-                        start: await this.config.today(),
-                        end: (await this.config.today()) + 86399,
+                        start: await this.commonService.today(),
+                        end: (await this.commonService.today()) + 86399,
                         status: 1,
                         uid: Number(params.uid),
                         goodsId: item.id,
@@ -205,7 +209,7 @@ export class ShopService {
     async getIndulgeCheckPay(params): Promise<any> {
         // if (!_.has(params, "uid"))
 
-        let player = await this.userService.searchPlayer({ searchKey: "uid", searchValue: params.uid });
+        let player = await this.commonService.searchPlayer({ searchKey: "uid", searchValue: params.uid });
         if (_.isEmpty(player.data)) throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND);
 
         let pData = player.data;
@@ -225,7 +229,7 @@ export class ShopService {
                 if (age < 8) {
                     return { age: age, eachPay: 0, totalPay: 0 }
                 } else if (age >= 8 && age < 16) {
-                    let ct = await this.config.monthStart();
+                    let ct = await this.commonService.monthStart();
                     let sqlMonth = "SELECT SUM(money) as num FROM shop WHERE player_id=" + Number(uid) + " AND status=1 AND create_time>=" + ct;
                     let ret = await this.shopRepository.query(sqlMonth);
 
@@ -236,7 +240,7 @@ export class ShopService {
 
                     return { age: age, eachPay: 50, totalPay: 200 - num };
                 } else if (age >= 16 && age < 18) {
-                    let ct = await this.config.monthStart();
+                    let ct = await this.commonService.monthStart();
                     let sqlMonth = "SELECT SUM(money) as num FROM shop WHERE player_id=" + Number(uid) + " AND status=1 AND create_time>=" + ct;
                     let ret = await this.shopRepository.query(sqlMonth);
 
@@ -256,12 +260,9 @@ export class ShopService {
     public async acContinuousrewardInfo(params): Promise<any> {
         // if (!_.has(params, "uid"))
 
-        let player: any = await this.userService.searchPlayer({ searchKey: "uid", searchValue: params.uid });
+        let player: any = await this.commonService.searchPlayer;({ searchKey: "uid", searchValue: params.uid });
         if (_.isEmpty(player.data)) {
-            return {
-                code: this.config.get("code.PARAMSERROR"),
-                msg: "found player info 404",
-            };
+            throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND)
         }
         player = player.data;
 
@@ -278,7 +279,7 @@ export class ShopService {
                 break;
             case 1:
                 // 每天指定时间
-                let today = await this.config.today();
+                let today = await this.commonService.today();
                 endTime = (today + Number(ret.CloseTime)) * 1000;
                 startTime = (today + Number(ret.OpenTime)) * 1000;
                 break;
@@ -357,7 +358,7 @@ export class ShopService {
     public async acContinuousreward(params): Promise<any> {
         // if (!_.has(params, "uid"))
 
-        let player: any = await this.userService.searchPlayer({ searchKey: "uid", searchValue: params.uid });
+        let player: any = await this.commonService.searchPlayer;({ searchKey: "uid", searchValue: params.uid });
         if (_.isEmpty(player.data)) {
             throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_PARAMETER,"found player info 404");
         }
@@ -378,7 +379,7 @@ export class ShopService {
                 break;
             case 1:
                 // 每天指定时间
-                let today = await this.config.today();
+                let today = await this.commonService.today();
                 endTime = (today + Number(ret.CloseTime)) * 1000;
                 startTime = (today + Number(ret.OpenTime)) * 1000;
                 break;
@@ -469,9 +470,9 @@ export class ShopService {
 
             if (!!check && !!check.white && !!check.bate) {
                 // bate 内部账号
-                gameServers = this.config.get("config" + player.appType + ".GAME_SERVER_PAY_BATE");
+                gameServers = this.commonService.get("config" + player.appType + ".GAME_SERVER_PAY_BATE");
             } else {
-                gameServers = this.config.get("config" + player.appType + ".GAME_SERVER_PAY");
+                gameServers = this.commonService.get("config" + player.appType + ".GAME_SERVER_PAY");
             }
 
             if (!gameServers) {
@@ -551,8 +552,7 @@ export class ShopService {
             return item.Reward ;
         } else {
             // 发货失败
-            throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_PARAMETER, "shop http error");
-            // return { code: this.config.get("code.INERROR"), data: resData };
+            throw Exception.toException(ExceptionEnum.INERROR, "",resData);
         }
     }
 
@@ -574,7 +574,7 @@ export class ShopService {
 
         // if (!_.has(params, "uid"))
         // if (!_.has(params, "appType"))
-        let player = await this.userService.searchPlayer({ searchKey: "uid", searchValue: params.uid });
+        let player :any= await this.commonService.searchPlayer;({ searchKey: "uid", searchValue: params.uid });
         if (_.isEmpty(player.data)) {
             throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND);
         }
@@ -650,7 +650,7 @@ export class ShopService {
 
         // 包含多个商品 和 链式限制
         if (_.has(params, "parentId") && params.parentId > 0) {
-            let parentItem = await this.shopReleaseModel.findOne({ id: Number(params.parentId) }).lean();
+            let parentItem:any = await this.shopReleaseModel.findOne({ id: Number(params.parentId) }).lean();
             if (!parentItem) {
                 throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND, params.parentId + " not found;" );// 限制特定用户不能购买
             }
@@ -712,10 +712,7 @@ export class ShopService {
             );
 
             if (item.totalLimit <= (await qb.getCount())) {
-                return {
-                    code: this.config.get("code.AUTHERROR"),
-                    data: { msg: "购买到达总限制" },
-                };
+                throw Exception.toException(ExceptionEnum.AUTHERROR,"购买到达总限制")
             }
         }
 
@@ -725,8 +722,8 @@ export class ShopService {
             qb = qb.andWhere(
                 "create_time BETWEEN :start AND :end AND status=:status AND player_id=:uid AND goods_id=:goodsId",
                 {
-                    start: await this.config.today(),
-                    end: (await this.config.today()) + 86399,
+                    start: await this.commonService.today(),
+                    end: (await this.commonService.today()) + 86399,
                     status: 1,
                     uid: Number(params.uid),
                     goodsId: Number(params.id),
@@ -757,7 +754,7 @@ export class ShopService {
                 break;
             case 1:
                 // 每天指定时间
-                let today = await this.config.today();
+                let today = await this.commonService.today();
                 endTime = (today + Number(ret.CloseTime)) * 1000;
                 startTime = (today + Number(ret.OpenTime)) * 1000;
                 break;
@@ -835,13 +832,11 @@ export class ShopService {
                 break;
             case shopConstConfig.shopSuperRotary:
                 if (!playerInfo.playerFinancial.canBuySuperShopRotary) {
-                    throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-                    return { code: this.config.get("code.PARAMSERROR"), data: { msg: "canBuySuperShopRotary = 0" } };
+                    throw Exception.toException(ExceptionEnum.PARAMSERROR,"canBuySuperShopRotary = 0");
                 }
                 break;
             default:
-                throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-                return { code: this.config.get("code.NOTFOUND"), data: { msg: "item.goodsType == 5, but id 404" } };
+                throw Exception.toException(ExceptionEnum.NOTFOUND,"item.goodsType == 5, but id 404");
         }
 
         return { code: CodeEnum.OK };
@@ -852,17 +847,13 @@ export class ShopService {
         if (_.has(item, "firstUI") && item.firstUI == 0) {
             let upItem = await this.shopReleaseModel.find({ nextId: Number(params.id) }).lean();
             if (!upItem || !upItem.length) {
-                throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-                return {
-                    code: this.config.get("code.INERROR"), data: { msg: "配置信息错误, 上一层商品404" },
-                };
+                throw Exception.toException(ExceptionEnum.INERROR,"配置信息错误, 上一层商品404");
             }
 
             for (let i = 0; i < upItem.length; i++) {
                 let ele = upItem[i];
                 if (!ele.totalLimit && !ele.dailyLimit) {
-                    throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-                    return { code: this.config.get("code.INERROR"), data: { msg: "上一层商品没有限制购买次数" } };
+                    throw Exception.toException(ExceptionEnum.INERROR,"上一层商品没有限制购买次数");
                 }
 
                 if (!!ele.totalLimit) {
@@ -878,8 +869,7 @@ export class ShopService {
                     );
 
                     if (ele.totalLimit > (await qb.getCount())) {
-                        throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-                        return { code: this.config.get("code.AUTHERROR"), data: { msg: "上一层商品总购买限制没有购买完" } };
+                        throw Exception.toException(ExceptionEnum.AUTHERROR,"上一层商品总购买限制没有购买完");
                     }
                 }
 
@@ -890,8 +880,8 @@ export class ShopService {
                     qb = qb.andWhere(
                         "create_time BETWEEN :start AND :end AND status=:status AND player_id=:uid AND goods_id=:goodsId",
                         {
-                            start: await this.config.today(),
-                            end: (await this.config.today()) + 86399,
+                            start: await this.commonService.today(),
+                            end: (await this.commonService.today()) + 86399,
                             status: 1,
                             uid: Number(params.uid),
                             goodsId: ele.id,
@@ -899,8 +889,7 @@ export class ShopService {
                     );
 
                     if (ele.dailyLimit > (await qb.getCount())) {
-                        throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-                        return { code: this.config.get("code.AUTHERROR"), data: { msg: "上一层商品每日限制没有购买完" } };
+                        throw Exception.toException(ExceptionEnum.AUTHERROR,"上一层商品每日限制没有购买完");
                     }
                 }
 
@@ -916,8 +905,7 @@ export class ShopService {
         let res = await this.shopRepository.query(sql);
 
         if (!!res && !!res.length) {
-            throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-            return { code: this.config.get("code.AUTHERROR"), data: { msg: "3秒内有未处理的订单" } };
+            throw Exception.toException(ExceptionEnum.AUTHERROR,"3秒内有未处理的订单");
         }
 
         return { code: CodeEnum.OK };
@@ -935,38 +923,30 @@ export class ShopService {
             if (!!check18Doc) {
                 let age = check18Doc.age;
                 if (age < 8) {
-                    throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-                    return { code: this.config.get("code.AUTHERROR"), data: { msg: "玩家年龄小于8周岁：禁止充值、禁止使用付费说明" } }
+                    throw Exception.toException(ExceptionEnum.AUTHERROR,"玩家年龄小于8周岁：禁止充值、禁止使用付费说明");
                 } else if (age >= 8 && age < 16) {
                     if (amount > 50) {
-                        throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-                        return { code: this.config.get("code.AUTHERROR"), data: { msg: "年龄大于等于8周岁小于16周岁：充值金额每次不大于50元" } }
+                        throw Exception.toException(ExceptionEnum.AUTHERROR,"年龄大于等于8周岁小于16周岁：充值金额每次不大于50元");
                     }
 
-                    let ct = await this.config.monthStart();
+                    let ct = await this.commonService.monthStart();
                     let sqlMonth = "SELECT SUM(money) as num FROM shop WHERE player_id=" + Number(uid) + " AND status=1 AND create_time>=" + ct;
                     let ret = await this.shopRepository.query(sqlMonth);
                     if (!!ret && !!ret.length) {
                         if (Number(ret[0].num) + amount > 200) {
-                            throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-                            return { code: this.config.get("code.AUTHERROR"), data: { msg: "年龄大于等于8周岁小于16周岁：每月不得大于200元" } }
-                        }
+                            throw Exception.toException(ExceptionEnum.AUTHERROR,"年龄大于等于8周岁小于16周岁：每月不得大于200元");}
                     }
                 } else if (age >= 16 && age < 18) {
                     if (amount > 100) {
-                        throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-                        return { code: this.config.get("code.AUTHERROR"), data: { msg: "年龄大于等于16周岁小于18周岁：充值金额每次不得大于100元" } }
-                    }
+                        throw Exception.toException(ExceptionEnum.AUTHERROR,"年龄大于等于16周岁小于18周岁：充值金额每次不得大于100元");}
 
-                    let ct = await this.config.monthStart();
+                    let ct = await this.commonService.monthStart();
                     let sqlMonth = "SELECT SUM(money) as num FROM shop WHERE player_id=" + Number(uid) + " AND status=1 AND create_time>=" + ct;
                     let ret = await this.shopRepository.query(sqlMonth);
 
                     if (!!ret && !!ret.length) {
                         if (Number(ret[0].num) + amount > 400) {
-                            throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-                            return { code: this.config.get("code.AUTHERROR"), data: { msg: "年龄大于等于16周岁小于18周岁：每月不得大于400元" } }
-                        }
+                            throw Exception.toException(ExceptionEnum.AUTHERROR,"年龄大于等于16周岁小于18周岁：每月不得大于400元");}
                     }
                 }
             }
@@ -1086,7 +1066,8 @@ export class ShopService {
             })
         }
 
-        let payId = process.env.NOW_ENV + "pay" + (await this.config.formateTime(new Date(), "yyyyMMddhms")) + Math.floor(Math.random() * 10000) + this.config.nonceStr(4);
+        let payId = process.env.NOW_ENV + "pay" + (await this.commonService.formateTime(new Date(), "yyyyMMddhms"))
+            + Math.floor(Math.random() * 10000) + this.commonService.nonceStr(4);
         if (!!outPayId) {
             payId = outPayId;
         }
@@ -1095,23 +1076,20 @@ export class ShopService {
                 case "Google":
                     return await this.google(params, player.data, payId, item, gameServerItem, t1);
                 default:
-                    throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-                    return { code: this.config.get("code.PARAMSERROR"), data: { msg: "payApi error" } };
+                    throw Exception.toException(ExceptionEnum.PARAMSERROR,"payApi error");
             }
         } catch (e) {
-            throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-            return { code: this.config.get("code.INERROR"), data: { msg: e } };
+            throw Exception.toException(ExceptionEnum.INERROR,e);
         }
     }
 
     private async buyActionCat(item, gameServerItem, params, player, t1, ip, remoteAddr = "127.0.0.1", maintain, outPayId): Promise<any> {
         // 购买的物品
         if (item.goodsType != 2) {
-            throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-            return { code: this.config.get("code.PARAMSERROR"), data: { msg: "goodsType error" } };
+            throw Exception.toException(ExceptionEnum.PARAMSERROR,"goodsType error");
         }
 
-        let userData = await this.toPlayerModel.findOne({ uid: Number(params.uid) }, { "goFishingInfo.cat": 1 }).lean();
+        let userData:any = await this.toPlayerModel.findOne({ uid: Number(params.uid) }, { "goFishingInfo.cat": 1 }).lean();
         if (!!userData && !!userData.goFishingInfo && !!userData.goFishingInfo.cat && userData.goFishingInfo.cat.CatSto + userData.goFishingInfo.cat.CatBag > 0) {
             let gold = userData.goFishingInfo.cat.CatSto + userData.goFishingInfo.cat.CatBag;
             item.rewardItems = [{
@@ -1120,17 +1098,17 @@ export class ShopService {
                 itemNum: gold
             }];
 
-            let payId = process.env.NOW_ENV + "cat" + (await this.config.formateTime(new Date(), "yyyyMMddhms")) + Math.floor(Math.random() * 10000) + this.config.nonceStr(4);
+            let payId = process.env.NOW_ENV + "cat" + (await this.commonService.formateTime(new Date(), "yyyyMMddhms"))
+                + Math.floor(Math.random() * 10000) + this.commonService.nonceStr(4);
             return await this.buyAction(item, gameServerItem, params, player, t1, ip, remoteAddr, maintain, payId);
         } else {
-            throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-            return { code: this.config.get("code.INERROR"), data: { msg: "goFishingInfo.cat 404" } };
+            throw Exception.toException(ExceptionEnum.INERROR,"goFishingInfo.cat 404");
         }
     }
 
     async payResult(payId = null, succ = null, goodsId = null, item = null): Promise<any> {
         let res = await this.payResultShop(payId, succ, goodsId, item);
-        if (this.config.get("gameConfig.localDev")) {
+        if (this.commonService.getDevelopType()) {
             console.log("============================= 发货结果", res);
         }
         return res;
@@ -1156,7 +1134,7 @@ export class ShopService {
     }
 
     private async payResultShop(payId = null, succ = null, goodsId = null, item = null): Promise<any> {
-        let orderStatus = await this.config.get("code.orderStatus.orderStatus");
+        let orderStatus = await this.commonService.get("code.orderStatus.orderStatus");
         if (succ) {
             try {
                 // 支付成功
@@ -1176,11 +1154,7 @@ export class ShopService {
                         item = JSON.parse(needItem.msg);
                         goodsId = needItem.goodsId;
                     } else {
-                        throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-                        return {
-                            code: this.config.get("code.ORDER_ERROR_NOTFOUND"),
-                            msg: "找不到订单1: " + payId,
-                        };
+                        throw Exception.toException(ExceptionEnum.ORDER_ERROR_NOTFOUND,"找不到订单1: " + payId);
                     }
 
                     if (!!needItem.status && needItem.status === 110) {
@@ -1199,8 +1173,7 @@ export class ShopService {
                                 status: -4,
                             };
                             await this.shopRepository.update({ payId: payId }, updateData);
-                            throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-                            return { code: this.config.get("code.ORDER_ERROR_PRODUCT_NOTFOUND"), data: { msg: goodsId + " not found;" } };
+                            throw Exception.toException(ExceptionEnum.ORDER_ERROR_PRODUCT_NOTFOUND,goodsId + " not found;");
                         }
 
                         if (!!goods) {
@@ -1209,9 +1182,9 @@ export class ShopService {
                         }
 
                         // 保存发货之前的账号信息
-                        let userData = await this.toPlayerModel.findOne({ uid: Number(needItem.playerId) }, { _id: 0, "accountInfo": 1, createTime: 1 }).lean();
+                        let userData:any = await this.toPlayerModel.findOne({ uid: Number(needItem.playerId) }, { _id: 0, "accountInfo": 1, createTime: 1 }).lean();
                         // 再次检查是否可以发送到游戏服
-                        let canDo = await this.canSendToGameServer(needItem.playerId, goods, goodsId, payId);
+                        let canDo :any= await this.canSendToGameServer(needItem.playerId, goods, goodsId, payId);
                         if (canDo.code != 200) {
                             // 发货失败
                             let updateData = {
@@ -1220,8 +1193,7 @@ export class ShopService {
                             };
 
                             await this.shopRepository.update({ payId: payId }, updateData);
-                            throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-                            return { code: this.config.get("code.ORDER_ERROR_REPEAT_PAY"), msg: "line 12311s 重复购买，不可以发送到游戏服, goodsId:" + goodsId };
+                            throw Exception.toException(ExceptionEnum.ORDER_ERROR_REPEAT_PAY,"line 12311s 重复购买，不可以发送到游戏服, goodsId:" + goodsId);
                         }
 
                         let resData: any;
@@ -1229,20 +1201,18 @@ export class ShopService {
                             let gameServers: any;
                             let check = await this.lockPlayerModel.findOne({ uid: Number(item.uid) }).lean();
                             if (!!check && !!check.lock) {
-                                throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-                                return { code: this.config.get("code.PARAMSERROR") };
+                                throw Exception.toException(ExceptionEnum.PARAMSERROR,"canBuyShopRotary = 0");
                             }
 
                             if (!!check && !!check.white && !!check.bate) {
                                 // bate 内部账号
-                                gameServers = this.config.get("config" + needItem.appType + ".GAME_SERVER_PAY_BATE");
+                                gameServers = this.commonService.get("config" + needItem.appType + ".GAME_SERVER_PAY_BATE");
                             } else {
-                                gameServers = this.config.get("config" + needItem.appType + ".GAME_SERVER_PAY");
+                                gameServers = this.commonService.get("config" + needItem.appType + ".GAME_SERVER_PAY");
                             }
 
                             if (!gameServers) {
-                                throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-                                return { code: this.config.get("code.AUTHERROR"), msg: "appType错误：" + needItem.appType };
+                                throw Exception.toException(ExceptionEnum.AUTHERROR,"appType错误：" + needItem.appType);
                             }
 
                             let num = Math.floor(Math.random() * (gameServers.length - 1 + 1)) + 0;
@@ -1291,24 +1261,17 @@ export class ShopService {
                             await this.shopRepository.update({ payId: payId }, updateData);
 
                             if (_.has(error, "error") && _.has(error.error, "code")) {
-                                throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-                                return {
-                                    code: this.config.get("code.INERROR"),
-                                    data: { msg: error.error.code, line: "shop" + 1 },
-                                };
+                                throw Exception.toException(ExceptionEnum.INERROR,error.error.code);
                             }
-                            throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-                            return {
-                                code: this.config.get("code.INERROR"),
-                                data: { msg: "shop http error", line: 1 },
-                            };
+                            throw Exception.toException(ExceptionEnum.INERROR,"shop http error");
+
                         }
                         // 保存发货之后的账号信息
-                        let userDataAfter = await this.toPlayerModel.findOne({ uid: Number(needItem.playerId) }, { _id: 0, "accountInfo": 1 }).lean();
+                        let userDataAfter:any = await this.toPlayerModel.findOne({ uid: Number(needItem.playerId) }, { _id: 0, "accountInfo": 1 }).lean();
 
                         if (goods.goodsType == 4) {
                             // 连续奖励商品
-                            let playerData = await this.userService.searchPlayer({ searchKey: "uid", searchValue: Number(needItem.playerId) });
+                            let playerData:any = await this.commonService.searchPlayer;({ searchKey: "uid", searchValue: Number(needItem.playerId) });
                             let player = playerData.data;
 
                             let itemConfig = await this.configSlotsAcContinuousRewardModel.findOne({ ShopId: goods.goodsId }, { _id: 0, __v: 0 }).sort({ Id: 1 }).lean();
@@ -1353,7 +1316,7 @@ export class ShopService {
                                 msgAfter: JSON.stringify(userDataAfter.accountInfo)
                             };
 
-                            if (await this.config.realDay(needItem.createTime * 1000) != await this.config.today()) {
+                            if (await this.commonService.realDay(needItem.createTime * 1000) != await this.commonService.today()) {
                                 updateData.createTime = updateData.payTime;
                             }
 
@@ -1368,20 +1331,13 @@ export class ShopService {
                             };
 
                             await this.shopRepository.update({ payId: payId }, updateData);
-                            throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-
-                            return { code: this.config.get("code.INERROR"), data: resData };
+                            throw Exception.toException(ExceptionEnum.INERROR,"",resData);
                         }
                     } else {
-                        throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-
-                        return { code: this.config.get("code.ORDER_ERROR_STATUS"), mas: "订单状态不为[待支付]" };
+                        throw Exception.toException(ExceptionEnum.ORDER_ERROR_STATUS,"订单状态不为[待支付]");
                     }
                 } else {
-                    throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
-
-                    // console.error("重复通知的订单ID：", payId);
-                    return { code: this.config.get("code.ORDER_ERROR_REPEAT_NOTIFY"), mas: "重复通知" };
+                    throw Exception.toException(ExceptionEnum.ORDER_ERROR_REPEAT_NOTIFY,"重复通知");
                 }
             } catch (error) {
                 console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx alipay payResult error", error);
@@ -1392,10 +1348,7 @@ export class ShopService {
             if (!!needItem && !_.isEmpty(needItem)) {
                 goodsId = needItem.goodsId;
             } else {
-                return {
-                    code: this.config.get("code.ORDER_ERROR_NOTFOUND"),
-                    msg: "找不到订单: " + payId,
-                };
+                throw Exception.toException(ExceptionEnum.ORDER_ERROR_NOTFOUND,"找不到订单: " + payId);
             }
 
             let updateData = {
@@ -1404,8 +1357,8 @@ export class ShopService {
 
             await this.shopRepository.update({ payId: payId }, updateData);
             throw Exception.toException(ExceptionEnum.SYSTEMS_ERROR_USER_NOT_FOUND,"canBuyShopRotary = 0");
+            throw Exception.toException(ExceptionEnum.INERROR,"line sssw111");
 
-            return { code: this.config.get("code.INERROR"), msg: "line sssw111" };
         }
     }
 
@@ -1423,10 +1376,7 @@ export class ShopService {
             );
 
             if (item.totalLimit <= (await qb.getCount())) {
-                return {
-                    code: this.config.get("code.AUTHERROR"),
-                    data: { msg: "购买到达总限制" },
-                };
+                throw Exception.toException(ExceptionEnum.AUTHERROR,"购买到达总限制");
             }
         }
 
@@ -1436,8 +1386,8 @@ export class ShopService {
             qb = qb.andWhere(
                 "create_time BETWEEN :start AND :end AND status!=-3 AND player_id=:uid AND goods_id=:goodsId AND payId!=:payId",
                 {
-                    start: await this.config.today(),
-                    end: (await this.config.today()) + 86399,
+                    start: await this.commonService.today(),
+                    end: (await this.commonService.today()) + 86399,
                     uid: Number(uid),
                     goodsId: goodsId,
                     payId: payId
@@ -1446,22 +1396,15 @@ export class ShopService {
 
             if (goodsId == shopConstConfig.insideShopGoodsId.dailywage) {
                 if (1 <= (await qb.getCount())) {
-                    return {
-                        code: this.config.get("code.AUTHERROR"),
-                        data: { msg: "购买到达单日限制" },
-                    };
+                    throw Exception.toException(ExceptionEnum.AUTHERROR,"购买到达单日限制");
                 }
             } else {
                 if (item.dailyLimit <= (await qb.getCount())) {
-                    return {
-                        code: this.config.get("code.AUTHERROR"),
-                        data: { msg: "购买到达单日限制" },
-                    };
+                    throw Exception.toException(ExceptionEnum.AUTHERROR,"购买到达单日限制");
                 }
             }
         }
-
-        return { code: CodeEnum.OK, data: "可以发送到游戏服" };
+        return
     }
 
     async aliPayResult(body: any): Promise<any> {
@@ -1481,30 +1424,21 @@ export class ShopService {
      */
     async googleResult(body: any): Promise<any> {
         if(body.orderId!=undefined&&body.productId!=undefined&&body.token!=undefined){
-            return {
-                code: this.config.get("code.PARAMSERROR"),
-                msg: "googleResult参数异常！"
-            };
+
         }
-        let purchaseState:any=await this.config.get("orderStatus.googlePurchaseState");
-        let orderStatus:any=await this.config.get("orderStatus.orderStatus");
-        let consumptionStatus:any=await this.config.get("orderStatus.googleConsumptionStatus");
+        let purchaseState:any=await this.commonService.get("orderStatus.googlePurchaseState");
+        let orderStatus:any=await this.commonService.get("orderStatus.orderStatus");
+        let consumptionStatus:any=await this.commonService.get("orderStatus.googleConsumptionStatus");
         let orderId = body.orderId;
         let payId = body.payId;
         let productId = body.productId;
 
         let old:any=await this.shopRepository.find({payId:payId});
         if(old.length==0){
-            return {
-                code: this.config.get("code.ORDER_ERROR_NOTFOUND"),
-                msg: "找不到订单1: " + payId,
-            };
+            throw Exception.toException(ExceptionEnum.ORDER_ERROR_NOTFOUND,"找不到订单1: " + payId)
         }
         if(old.length>1){
-            return {
-                code: this.config.get("code.ORDER_ERROR_REPEAT"),
-                msg: "同单号查到多个订单: " + payId,
-            };
+            throw Exception.toException(ExceptionEnum.ORDER_ERROR_REPEAT,"同单号查到多个订单: " + payId)
         }
         old=old[0];
         let handleResult:any=await this.checkGoogleOrder(old.googleProductId,body.token);
@@ -1513,10 +1447,7 @@ export class ShopService {
         }
         //判断令牌订单号和api查到的订单号是否相同
         if(orderId!==handleResult.orderId){
-            return {
-                code: this.config.get("code.INERROR"),
-                msg: "订单异常"
-            };
+            throw Exception.toException(ExceptionEnum.INERROR,"订单异常")
         }
         await this.shopRepository.update({payId:old.payId},{transOrderId:handleResult.orderId,
             extStatus:consumptionStatus.YET_CONSUMER});
@@ -1524,10 +1455,7 @@ export class ShopService {
 
         //判断订单是否已关闭
         if(old.status==orderStatus.PAYMENT_FAILURE){
-            return {
-                code: this.config.get("code.ORDER_CLOSED"),
-                msg: "订单已关闭"
-            };
+            throw Exception.toException(ExceptionEnum.ORDER_CLOSED)
         }
         if(purchaseState.PURCHASED==handleResult.purchaseState){
             return await this.payResult(old.payId, true);
@@ -1536,17 +1464,11 @@ export class ShopService {
             if(handleResult.purchaseState==purchaseState.CANCELED){
                 state=orderStatus.PAYMENT_FAILURE;
                 await this.shopRepository.update({payId:old.payId},{status:state,});
-                return {
-                    code: this.config.get("code.ORDER_CLOSED"),
-                    msg: "订单已关闭"
-                };
+                throw Exception.toException(ExceptionEnum.ORDER_ERROR_GOOGLE_CANCELED)
             }
             if(handleResult.purchaseState==purchaseState.PENDING) state=orderStatus.WAIT_FOR_PAYMENT;
             await this.shopRepository.update({payId:old.payId},{status:state,});
-            return {
-                code: this.config.get("code.ORDER_PAY_ERROR"),
-                msg: "订单未支付成功"
-            };
+            throw Exception.toException(ExceptionEnum.ORDER_PAY_ERROR)
         }
 
     }
@@ -1556,21 +1478,15 @@ export class ShopService {
      * @param body
      */
     async googleConsume(body: any): Promise<any> {
-        let purchaseState:any=await this.config.get("orderStatus.googlePurchaseState");
+        let purchaseState:any=await this.commonService.get("orderStatus.googlePurchaseState");
 
-        let consumptionStatus:any=await this.config.get("orderStatus.googleConsumptionStatus");
+        let consumptionStatus:any=await this.commonService.get("orderStatus.googleConsumptionStatus");
         let order:any=await this.shopRepository.find({payId:body.payId});
         if(order.length==0){
-            return {
-                code: this.config.get("code.ORDER_ERROR_NOTFOUND"),
-                msg: "找不到订单1: " + body.payId,
-            };
+            throw Exception.toException(ExceptionEnum.ORDER_ERROR_NOTFOUND,"找不到订单1: " + body.payId)
         }
         if(order.length>1){
-            return {
-                code: this.config.get("code.ORDER_ERROR_REPEAT"),
-                msg: "同单号查到多个订单: " + body.payId,
-            };
+            throw Exception.toException(ExceptionEnum.ORDER_ERROR_REPEAT,"同单号查到多个订单: " + body.payId)
         }
         order=order[0];
         let handleResult:any=await this.checkGoogleOrder(order.googleProductId,body.token);
@@ -1579,31 +1495,19 @@ export class ShopService {
         }
 
         if(consumptionStatus.CONSUMERED==order.extStatus){
-            return {
-                code: this.config.get("code.ORDER_ERROR_STATUS"),
-                msg: "异常，订单已消费"
-            };
+            throw Exception.toException(ExceptionEnum.ORDER_ERROR_STATUS)
         }
         if(order.transOrderId!=handleResult.orderId){
-            return {
-                code: this.config.get("code.ORDER_ERROR_GOOGLE_ORDERID"),
-                msg: "GOOGLE订单号不符"
-            };
+            throw Exception.toException(ExceptionEnum.ORDER_ERROR_GOOGLE_ORDERID)
         }
         if(order.payId!=handleResult.obfuscatedExternalProfileId){
-            return {
-                code: this.config.get("code.ORDER_ERROR"),
-                msg: "订单号不符"
-            };
+            throw Exception.toException(ExceptionEnum.ORDER_ERROR)
         }
         if(consumptionStatus.CONSUMERED==handleResult.consumptionState) {
             await this.shopRepository.update({payId:order.payId},{extStatus:consumptionStatus.CONSUMERED});
-            return { code: CodeEnum.OK,msg:"订单消费成功",data:JSON.stringify({})};
+            return ;
         }
-        return {
-            code: this.config.get("code.ORDER_ERROR"),
-            msg: "订单异常"
-        };
+        throw Exception.toException(ExceptionEnum.ORDER_ERROR)
     }
 
     private async freeOfRecharge(
@@ -1646,8 +1550,7 @@ export class ShopService {
         if (!!res && res.code == 200) {
             return { code: CodeEnum.OK, data: res };
         }
-
-        return { code: this.config.get("code.INERROR"), data: res };
+        throw Exception.toException(ExceptionEnum.INERROR,"",res)
     }
 
 
@@ -1689,10 +1592,10 @@ export class ShopService {
             await this.shopRepository.insert(addData);
         } catch (error) {
             console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxee", error);
-            return { code: this.config.get("code.INERROR"), data: { msg: error } };
+            throw Exception.toException(ExceptionEnum.INERROR,error)
         }
 
-        if (!!this.config.get("gameConfig.localDev")) {
+        if (!!this.commonService.getDevelopType()) {
             setTimeout(() => {
                 this.payResult(payId, true, goods.goodsId, item);
             }, 3000);
@@ -1713,7 +1616,7 @@ export class ShopService {
     }
 
     public async getPayId() {
-        return process.env.NOW_ENV + "pay" + (await this.config.formateTime(new Date(), "yyyyMMddhms")) + Math.floor(Math.random() * 10000) + this.config.nonceStr(4);
+        return process.env.NOW_ENV + "pay" + (await this.commonService.formateTime(new Date(), "yyyyMMddhms")) + Math.floor(Math.random() * 10000) + this.commonService.nonceStr(4);
     }
     private chunkSplit(paramString, paramLength, paramEnd = '\n') {
         let p = [];
@@ -1780,20 +1683,15 @@ export class ShopService {
                 method: "GET",
             });
         } catch (error) {
-            return {
-                code: this.config.get("code.ORDER_ERROR_GOOGLE_REFER"),
-                msg: "Google返回异常", line: 1811
-            };
+            throw Exception.toException(ExceptionEnum.ORDER_ERROR_GOOGLE_REFER)
         }
         //判断google返回
         if(_.isString(handleResult)){
             handleResult=JSON.parse(handleResult);
             return handleResult;
-        }else{
-            return {
-                code: this.config.get("code.PARAMSERROR"),
-                msg: "参数异常！", line: 1821
-            };
         }
+        throw Exception.toException(ExceptionEnum.PARAMSERROR)
+
+
     }
 }

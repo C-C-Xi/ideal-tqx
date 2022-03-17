@@ -8,6 +8,7 @@ import {CommonService} from "./common.service";
 import {NotificationConfigSchemaModel} from "../../entity/mongo/system/NotificationConfig.schema";
 import {IpErrorModel} from "../../entity/mongo/account/IPError.schema";
 import {PlayerDeviceInfoModel} from "../../entity/mongo/default/PlayerDeviceInfo.schema";
+import {ToPlayer, ToPlayerModel} from "../../entity/mongo/default/ToPlayer.schema";
 
 const BackendModel = [
     NotificationConfigSchemaModel,
@@ -17,7 +18,7 @@ const StatisticsModel = [
     IpErrorModel
 ];
 const TOGameModel = [
-
+    ToPlayerModel
 ];
 @Module({
     imports: [
