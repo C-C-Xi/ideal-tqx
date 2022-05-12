@@ -8,7 +8,7 @@ export class Exception {
         if(msg!=""){
             errorCode.message=msg
         }
-        if(data!=""){
+        if(data){
             errorCode.data=data
         }
         return new HttpException(errorCode.name,

@@ -566,6 +566,10 @@ export class ShopService {
     }
 
     async pay(params: any, remoteAddr: string, tt, ip): Promise<any> {
+      //校验参数
+        //商品校验
+        //获取商品信息
+        //生成订单
         params.id = params.productId;
         params.payApi = params.payApi.toLowerCase().replace(/( |^)[a-z]/g, (L) => L.toUpperCase());
 
@@ -1112,6 +1116,7 @@ export class ShopService {
             console.log("============================= 发货结果", res);
         }
         return res;
+
     }
 
     private async isFirstPay(playerId) {
